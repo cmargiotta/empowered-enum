@@ -36,6 +36,7 @@
           packages =
             with pkgs;
             [
+              clang
               cmake
               ninja
               meson
