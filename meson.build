@@ -7,12 +7,8 @@ else
 endif
 
 cpp = meson.get_compiler('cpp')
-cmake = import('cmake')
-
-ctre_pro = cmake.subproject('compile-time-regular-expressions')
 
 catch2 = dependency('catch2')
-ctre = ctre_pro.dependencies('ctre')
 
 subdir('src')
 subdir('test')
