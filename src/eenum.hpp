@@ -59,35 +59,84 @@ namespace eenum_
 
 #define TO_NAME_STRING(definition) eenum_::extract_name(#definition),
 
-#define eenum(identifier, underlying_type, ...)                                                    \
-    enum class identifier : underlying_type                                                        \
-    {                                                                                              \
-        __VA_ARGS__                                                                                \
-    };                                                                                             \
-    consteval auto identifier##_values()                                                           \
-    {                                                                                              \
-        using underlying = std::optional<underlying_type>;                                         \
-        underlying __VA_ARGS__;                                                                    \
-        return std::array {__VA_ARGS__};                                                           \
-    }                                                                                              \
-    struct identifier##_metadata                                                                   \
-    {                                                                                              \
-            static constexpr auto identifiers = eenum_::build_indexes<identifier>(                 \
-                identifier##_values(), apply(TO_NAME_STRING, __VA_ARGS__) "");                     \
-    };                                                                                             \
-    constexpr auto identifier##_to_string(identifier value)                                        \
-    {                                                                                              \
-        return std::find_if(identifier##_metadata::identifiers.begin(),                            \
-                            identifier##_metadata::identifiers.end(),                              \
-                            [value](const auto& element) { return element.first == value; })       \
-            ->second;                                                                              \
-    }                                                                                              \
-    constexpr auto string_to_##identifier(std::string_view&& value)                                \
-    {                                                                                              \
-        return std::find_if(identifier##_metadata::identifiers.begin(),                            \
-                            identifier##_metadata::identifiers.end(),                              \
-                            [&value](const auto& element) { return element.second == value; })     \
-            ->first;                                                                               \
+#define eenum(identifier, underlying_type, ...)                                                     \
+    consteval auto identifier##_values()                                                            \
+    {                                                                                               \
+        std::optional<underlying_type> __VA_ARGS__;                                                 \
+        return std::array {__VA_ARGS__};                                                            \
+    }                                                                                               \
+    class identifier                                                                                \
+    {                                                                                               \
+        public:                                                                                     \
+            enum class data : underlying_type                                                       \
+            {                                                                                       \
+                __VA_ARGS__                                                                         \
+            };                                                                                      \
+        private:                                                                                    \
+            data data_;                                                                             \
+                                                                                                    \
+            static constexpr auto metadata = eenum_::build_indexes<identifier::data>(               \
+                identifier##_values(), apply(TO_NAME_STRING, __VA_ARGS__) "");                      \
+        public:                                                                                     \
+            constexpr identifier()                                       = default;                 \
+            constexpr identifier(identifier&& other) noexcept            = default;                 \
+            constexpr identifier(const identifier& other)                = default;                 \
+            constexpr identifier& operator=(identifier&& other) noexcept = default;                 \
+            constexpr identifier& operator=(const identifier& other)     = default;                 \
+            constexpr identifier(data data_): data_ {data_}                                         \
+            {                                                                                       \
+            }                                                                                       \
+            constexpr identifier& operator=(data data_)                                             \
+            {                                                                                       \
+                this->data_ = data_;                                                                \
+                return *this;                                                                       \
+            }                                                                                       \
+            constexpr identifier(std::string_view&& value)                                          \
+                : data_ {std::find_if(metadata.begin(),                                             \
+                                      metadata.end(),                                               \
+                                      [&value](const auto& element)                                 \
+                                      { return element.second == value; })                          \
+                             ->first}                                                               \
+            {                                                                                       \
+            }                                                                                       \
+            constexpr identifier& operator=(const std::string& value)                               \
+            {                                                                                       \
+                *this = identifier {value};                                                         \
+                return *this;                                                                       \
+            }                                                                                       \
+            constexpr operator data()                                                               \
+            {                                                                                       \
+                return data_;                                                                       \
+            }                                                                                       \
+            constexpr auto to_string()                                                              \
+            {                                                                                       \
+                return std::find_if(metadata.begin(),                                               \
+                                    metadata.end(),                                                 \
+                                    [this](const auto& element) { return element.first == data_; }) \
+                    ->second;                                                                       \
+            }                                                                                       \
+            constexpr operator std::string_view()                                                   \
+            {                                                                                       \
+                return to_string();                                                                 \
+            }                                                                                       \
+            constexpr bool operator==(const test& other) const                                      \
+            {                                                                                       \
+                return data_ == other.data_;                                                        \
+            }                                                                                       \
+            constexpr bool operator==(data value) const                                             \
+            {                                                                                       \
+                return data_ == value;                                                              \
+            }                                                                                       \
+            operator std::string()                                                                  \
+            {                                                                                       \
+                return std::string {to_string()};                                                   \
+            }                                                                                       \
+    };                                                                                              \
+                                                                                                    \
+    auto& operator<<(auto& stream, identifier value)                                                \
+    {                                                                                               \
+        stream << value.to_string();                                                                \
+        return stream;                                                                              \
     }
 
 #endif /* EENUM_HPP */
