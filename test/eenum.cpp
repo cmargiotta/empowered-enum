@@ -8,7 +8,7 @@
 
 #include <eenum.hpp>
 
-eenum(test, int, A = 1, B, C);
+eenum(test, int, A = 1, B = 1, C, D = 50);
 
 template<typename T>
 concept assignable_to_underlying_type = requires(T e)
@@ -24,7 +24,7 @@ concept underlying_type_assignable_to_enum = requires(std::underlying_type_t<T> 
 
 TEST_CASE("eenum metadata generation", "[eenum]")
 {
-    REQUIRE(test_values().size() == 3);
+    REQUIRE(test_values().size() == 4);
     REQUIRE(eenum_::extract_name("A = 1") == "A");
 }
 
@@ -46,10 +46,14 @@ TEST_CASE("eenum usage", "[eenum]")
     REQUIRE(name == "A");
 
     t = "B";
-    REQUIRE(t.to_string() == "B");
+    REQUIRE(t.to_string() == "A");// B is an alias of A, it will be detected as A
     REQUIRE(t == test::B);
 
     t = test::C;
     REQUIRE(t.to_string() == "C");
     REQUIRE(t == test::C);
+
+    t = test::D;
+    REQUIRE(t.to_string() == "D");
+    REQUIRE(t == test::D);
 }
