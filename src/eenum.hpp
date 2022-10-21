@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <array>
+#include <concepts>
 #include <optional>
 #include <string>
 #include <type_traits>
@@ -68,7 +69,7 @@ namespace eenum_
     class identifier                                                                                \
     {                                                                                               \
         public:                                                                                     \
-            enum class data : underlying_type                                                       \
+            enum data : underlying_type                                                             \
             {                                                                                       \
                 __VA_ARGS__                                                                         \
             };                                                                                      \
@@ -104,11 +105,11 @@ namespace eenum_
                 *this = identifier {value};                                                         \
                 return *this;                                                                       \
             }                                                                                       \
-            constexpr operator data()                                                               \
+            constexpr operator data() const                                                         \
             {                                                                                       \
                 return data_;                                                                       \
             }                                                                                       \
-            constexpr auto to_string()                                                              \
+            constexpr auto to_string() const                                                        \
             {                                                                                       \
                 return std::find_if(metadata.begin(),                                               \
                                     metadata.end(),                                                 \
@@ -119,7 +120,7 @@ namespace eenum_
             {                                                                                       \
                 return to_string();                                                                 \
             }                                                                                       \
-            constexpr bool operator==(const test& other) const                                      \
+            constexpr bool operator==(const identifier& other) const                                \
             {                                                                                       \
                 return data_ == other.data_;                                                        \
             }                                                                                       \
@@ -127,6 +128,10 @@ namespace eenum_
             {                                                                                       \
                 return data_ == value;                                                              \
             }                                                                                       \
+                                                                                                    \
+            template<std::integral T>                                                               \
+            constexpr operator T() = delete;                                                        \
+                                                                                                    \
             operator std::string()                                                                  \
             {                                                                                       \
                 return std::string {to_string()};                                                   \
